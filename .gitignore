@@ -1,0 +1,13 @@
+# Secrets: API keys live here and must NEVER go to GitHub
+.env
+
+# Python virtual environment and caches
+.venv/
+__pycache__/
+*.pyc
+
+# Downloaded raw data (anyone can re-download it with src/data.py)
+data/*.csv
+
+# Mac clutter
+.DS_Store
