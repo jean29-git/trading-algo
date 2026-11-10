@@ -13,7 +13,7 @@ from pathlib import Path
 import pandas as pd
 import yfinance as yf
 
-from config import UNIVERSE
+from config import CASH_TICKER, UNIVERSE
 
 DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 PRICES_FILE = DATA_DIR / "prices.csv"
@@ -26,7 +26,7 @@ def download_prices() -> pd.DataFrame:
     That matters a lot here: TLT pays a monthly coupon. Using raw prices
     would understate bond returns and make the backtest wrong.
     """
-    tickers = list(UNIVERSE)
+    tickers = list(UNIVERSE) + [CASH_TICKER]
     raw = yf.download(tickers, start="2000-01-01", auto_adjust=True, progress=False)
     prices = raw["Close"][tickers]  # keep our column order
     prices.index = pd.to_datetime(prices.index).tz_localize(None)

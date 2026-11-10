@@ -20,7 +20,7 @@ is switched off sits in cash.
 import numpy as np
 import pandas as pd
 
-from config import LOOKBACK_DAYS, VOL_DAYS
+from config import CASH_TICKER, LOOKBACK_DAYS, VOL_DAYS
 
 
 def trend_signal(prices: pd.DataFrame) -> pd.DataFrame:
@@ -50,4 +50,8 @@ def target_weights(prices: pd.DataFrame) -> pd.DataFrame:
     the defensive feature: in 2008 or 2022, most things fall and the
     strategy steps aside.
     """
-    return inverse_vol_weights(prices) * trend_signal(prices)
+    risky = inverse_vol_weights(prices) * trend_signal(prices)
+    # Whatever is not invested goes into T-bills (BIL) instead of 0% cash.
+    weights = risky.copy()
+    weights[CASH_TICKER] = 1 - risky.sum(axis=1, min_count=1)
+    return weights

@@ -21,6 +21,11 @@ UNIVERSE = {
     "UUP": "US dollar index (long USD vs EUR, JPY, GBP...)",
 }
 
+# Where idle cash sits: BIL holds 1-3 month US Treasury bills, so it earns
+# roughly the Fed funds rate. Holding it (instead of plain cash) is also
+# exactly what we will do live on Alpaca, so the backtest matches reality.
+CASH_TICKER = "BIL"
+
 # Backtest starts once every ETF has trading history (UUP launched Feb 2007).
 START_DATE = "2007-03-01"
 

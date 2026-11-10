@@ -22,7 +22,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 
-from config import COST_BPS, REBALANCE_DAY, UNIVERSE
+from config import CASH_TICKER, COST_BPS, REBALANCE_DAY, UNIVERSE
 from strategy import inverse_vol_weights, target_weights
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -56,7 +56,7 @@ def run_backtest(prices: pd.DataFrame, weights: pd.DataFrame, start) -> pd.DataF
 
         rows.append({"date": date, "return": day_return - cost,
                      "turnover": traded, "cost": cost,
-                     "invested": float(holdings.sum())})
+                     "risky": float(holdings.drop(CASH_TICKER, errors="ignore").sum())})
 
     result = pd.DataFrame(rows).set_index("date")
     result["equity"] = (1 + result["return"]).cumprod()
@@ -79,12 +79,16 @@ def metrics(result: pd.DataFrame) -> dict:
         "Hit rate (weeks)": f"{(weekly > 0).mean():.0%}",
         "Turnover / year": f"{result['turnover'].sum() / years:.1f}x",
         "Costs / year": f"{result['cost'].sum() / years:.2%}",
-        "Avg invested": f"{result['invested'].mean():.0%}",
+        "Avg in risky assets": f"{result['risky'].mean():.0%}",
     }
 
 
 def main() -> None:
-    prices = pd.read_csv(PRICES_FILE, index_col=0, parse_dates=True)[list(UNIVERSE)]
+    all_prices = pd.read_csv(PRICES_FILE, index_col=0, parse_dates=True)
+    if CASH_TICKER not in all_prices:
+        raise SystemExit(f"{CASH_TICKER} missing: re-run  python src/data.py  first.")
+    prices = all_prices[list(UNIVERSE)]
+    trade_prices = all_prices[list(UNIVERSE) + [CASH_TICKER]]
 
     strategy_w = target_weights(prices)
     # Start once every asset has a full signal + volatility history.
@@ -98,7 +102,7 @@ def main() -> None:
     always_in = inverse_vol_weights(prices)
 
     results = {
-        "Trend strategy": run_backtest(prices, strategy_w, start),
+        "Trend strategy": run_backtest(trade_prices, strategy_w, start),
         "60/40": run_backtest(prices, sixty_forty, start),
         "Risk parity, no trend filter": run_backtest(prices, always_in, start),
     }
