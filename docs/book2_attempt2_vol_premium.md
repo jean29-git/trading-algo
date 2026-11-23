@@ -67,6 +67,25 @@ the standard approach of model prices, then checks them against real prices.
   Rubinstein) measures the early-exercise premium on the options we actually trade,
   to check the approximation. The backtest assumes no early assignment.
 
+### Check 2 result: American vs. European (2026-11-23, before any backtest)
+
+`src/check_early_exercise.py` priced our straddle (strike $690, rates 5%, the
+unfavourable case) with Black-Scholes and with a 1,000-step American tree:
+
+- **At entry** (30 days, at the money): American worth $0.13-0.16 more, i.e.
+  0.2-0.9% of the straddle. Black-Scholes slightly *under*states the premium we
+  receive, a small conservative bias.
+- **After a selloff** (SPY -5% to -10%, put in the money): American worth up to
+  $1.11 more, i.e. **up to 2.9%**. Here Black-Scholes *under*states what it costs us
+  to buy the straddle back, a non-conservative bias, and exactly in the stressed
+  markets where the VIX filter makes us buy back.
+- **After a rally** (call in the money): no gap (dividends too small to matter).
+
+**Refinement, decided now, before any backtest:** every option *trade* in the
+backtest (selling at entry, buying back on a filter exit) is priced with the
+American tree. Black-Scholes is still used for daily deltas, crash sizing and
+marking open positions, where the gap is small and only shifts P&L between days.
+
 ## Costs (fixed up front)
 
 - **Options:** pay half the bid-ask spread on every option trade: **$0.05 per share
