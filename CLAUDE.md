@@ -24,8 +24,12 @@ people in the industry. Two strategy "books", run like a small trading desk:
   below the 20-bar average, 200-day filter, 1σ stop, flat by close, own paper account
   PA3CY7MMI). Result 2016-2026: no edge before costs (-0.7bp/trade), -13.7%/yr and
   Sharpe -2.82 after 2bp costs. Reported as is. Code: `src/book2_*.py`,
-  tests in `tests/test_book2_engine.py`. Next: decide v2 with Jean (new hypothesis,
-  written down before testing, labelled attempt #2) or move on.
+  tests in `tests/test_book2_engine.py`.
+  **Attempt #2 (DESIGNED, not built):** volatility risk premium: short 1-month ATM SPY
+  straddle, delta-hedged daily, VIX/VIX3M filter checked daily, sized so a -20% crash
+  costs <=15% of the book. Rules pre-registered in `docs/book2_attempt2_vol_premium.md`.
+  Build order: pricer + binomial tree + Monte Carlo engine check + real-price check
+  (Alpaca options data from Feb 2024), then backtest, then fat-tail stress tests.
 - **Phase 2 idea:** volatility-regime filter (VIX vs VIX3M term structure).
 
 ## Rules
