@@ -14,3 +14,6 @@ data/*.csv
 
 # Mac clutter
 .DS_Store
+
+# Claude Code project brief (personal, kept on this Mac only)
+CLAUDE.md
