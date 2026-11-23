@@ -4,10 +4,13 @@ Connection test: proves the code can talk to your Alpaca PAPER account.
 It only READS (account balance, market clock, latest SPY price).
 It places no orders.
 
-Run from the project folder:   python src/alpaca_check.py
+Each book has its own paper account (so positions and P&L never mix):
+    python src/alpaca_check.py           # Book 1 account
+    python src/alpaca_check.py --book2   # Book 2 account
 """
 
 import os
+import sys
 from datetime import datetime, timedelta
 
 from alpaca.data.historical import StockHistoricalDataClient
@@ -16,18 +19,22 @@ from alpaca.data.timeframe import TimeFrame
 from alpaca.trading.client import TradingClient
 from dotenv import load_dotenv
 
+BOOK = "Book 2" if "--book2" in sys.argv else "Book 1"
+PREFIX = "ALPACA_BOOK2_" if BOOK == "Book 2" else "ALPACA_"
+
 load_dotenv()  # reads the keys from the .env file into memory
-KEY = os.getenv("ALPACA_API_KEY")
-SECRET = os.getenv("ALPACA_SECRET_KEY")
+KEY = os.getenv(PREFIX + "API_KEY")
+SECRET = os.getenv(PREFIX + "SECRET_KEY")
 if not KEY or "your_" in KEY:
-    raise SystemExit("No keys found: paste your paper keys into the .env file first.")
+    raise SystemExit(f"No {BOOK} keys found: paste them into the .env file first.")
 
 # paper=True is the safety switch: orders can only ever go to fake money.
 trading = TradingClient(KEY, SECRET, paper=True)
 account = trading.get_account()
 clock = trading.get_clock()
 
-print("Connected to Alpaca PAPER account")
+print(f"Connected to Alpaca PAPER account for {BOOK}")
+print(f"  Account:       {account.account_number}")
 print(f"  Status:        {account.status}")
 print(f"  Equity:        ${float(account.equity):,.2f}")
 print(f"  Cash:          ${float(account.cash):,.2f}")
