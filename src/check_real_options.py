@@ -40,6 +40,7 @@ from dotenv import load_dotenv
 from scipy.optimize import brentq
 
 from option_pricing import binomial_tree
+from vol_engine import monthly_expiries
 
 ROOT = Path(__file__).resolve().parent.parent
 VOL_DATA_FILE = ROOT / "data" / "vol_data.csv"
@@ -47,18 +48,6 @@ OUT_FILE = ROOT / "data" / "real_vs_vix.csv"
 FIRST_DAY = "2024-02-01"     # Alpaca's option history starts in February 2024
 TREE_STEPS = 200             # enough for cent-level accuracy, fast enough for ~700 days
 MIN_TRADES = 20              # skip days where either leg barely traded (stale price)
-
-
-def monthly_expiries(trading_days: pd.DatetimeIndex, until) -> list:
-    """Third Friday of each month; if the exchange is closed that day, the trading day before."""
-    out = []
-    for month in pd.date_range(trading_days[0], until, freq="MS"):
-        third_friday = month + pd.offsets.WeekOfMonth(week=2, weekday=4)
-        if third_friday > trading_days[-1]:
-            out.append(third_friday)                       # future expiry: assume a normal Friday
-        else:
-            out.append(trading_days[trading_days <= third_friday][-1])
-    return out
 
 
 def occ_symbol(expiry, strike, kind) -> str:

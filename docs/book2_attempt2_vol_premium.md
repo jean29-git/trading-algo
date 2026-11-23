@@ -187,7 +187,64 @@ Decided up front, same bar as attempt #1:
 
 If it fails, we report it as is.
 
-## Going live (later, paper only)
+## Result (2026-11-23): it does not pass
+
+`src/vol_backtest.py`, rules exactly as above, July 2006 to November 2026 (221
+monthly cycles traded, 23 skipped at entry by the filter). 4 hand-checkable tests
+in `tests/test_vol_backtest.py` pass.
+
+| | Official ($0.09 spreads) | Stress ($0.18) | No VIX filter | SPY buy & hold |
+|---|---|---|---|---|
+| Annual return | -0.7% | -2.0% | -0.6% | +10.8% |
+| Volatility | 2.9% | 3.0% | 3.9% | 19.4% |
+| Sharpe | -0.23 | -0.65 | -0.14 | 0.63 |
+| Max drawdown | -19.9% | -37.7% | -20.9% | -55.2% |
+| Worst day | -2.6% | -2.6% | -3.3% | -10.9% |
+
+**Verdict:** Sharpe -0.23 (needed 0.5), negative at stress spreads -> **does not pass.**
+(The crash sizing did its job: worst day -2.6%, far inside the 15% limit.)
+
+Where the money went ($, on a $100k start, before costs):
+
+| Cycles | Count | Avg length | P&L per cycle |
+|---|---|---|---|
+| Held to expiry (calm) | 154 | 27 days | **+$363** |
+| Closed by the VIX filter (stress) | 67 | 12 days | **-$597** |
+
+Plus costs of about $130 per cycle (option spreads + hedging), $29k in total.
+
+What we learned:
+
+1. **The at-the-money premium exists but is thin.** We sold at 14.8% vol on average
+   vs. 11.7% realized while held (above realized in 79% of cycles), but the real-price
+   check showed the VIX overstates at-the-money vol by ~16%: much of the insurance
+   premium lives in out-of-the-money puts (the skew), not in the straddle we sold.
+2. **The VIX filter sold the insurance back at the top.** It exits the day *after*
+   vol has spiked, locking in the mark-to-market loss and missing the usual fall in
+   vol afterwards. A stop-loss on a short-vol position is, in effect, buying vol
+   after it has gone up. Without the filter the result is no better (-0.6% a year,
+   worse months), because the spikes then hit in full.
+3. **Costs finish it off.** Option spreads and hedging (~1.6% a year) are larger
+   than the ~0.8% a year the strategy makes before costs.
+4. **Sizing for a 1987-style crash makes the book safe but small** (average notional
+   61% of the book), so the premium collected is small relative to costs.
+
+## Book 2 closed (2026-11-23)
+
+Lesson 1 points to the natural attempt #3: sell out-of-the-money puts, where the
+skew premium lives. It was **not attempted**, because it can't be tested honestly
+with the data available: free historical prices for those options start in 2024
+(~34 months, too few when one month's noise is as big as the edge), and the
+standard academic source (OptionMetrics) is not in BU's WRDS subscription.
+Modelling the skew without real prices would mean guessing the very thing being
+tested. Tweaking attempt #2 after seeing its results was ruled out as overfitting
+(the no-filter and zero-spread diagnostics show no small change rescues it).
+
+Book 2 ends as a research write-up: two pre-registered strategies, both failed,
+both explained. The tooling (option pricer, American binomial tree, hedging
+simulator, Monte Carlo checks, real-price check) stays in the repo.
+
+## Going live (not applicable: the strategy did not pass; kept for the record)
 
 - Alpaca paper account for Book 2 (PA3CY7MMI); options must be enabled on it.
 - **Whole contracts only:** one SPY straddle is ~$69k of notional. If the 15% crash

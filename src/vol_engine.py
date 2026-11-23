@@ -20,8 +20,28 @@ the Monte Carlo check needs.
 """
 
 import numpy as np
+import pandas as pd
 
-from option_pricing import black_scholes, greeks
+from option_pricing import binomial_tree, black_scholes, greeks
+
+
+def monthly_expiries(trading_days: pd.DatetimeIndex, until) -> list:
+    """Standard monthly expiries: third Friday of each month; if the exchange is
+    closed that day (e.g. Good Friday), the trading day before."""
+    out = []
+    for month in pd.date_range(trading_days[0].replace(day=1), until, freq="MS"):
+        third_friday = month + pd.offsets.WeekOfMonth(week=2, weekday=4)
+        if third_friday > trading_days[-1]:
+            out.append(third_friday)                       # future expiry: assume a normal Friday
+        else:
+            out.append(trading_days[trading_days <= third_friday][-1])
+    return out
+
+
+def american_straddle(S, K, T, r, q, sigma, steps=300):
+    """What a real (American) SPY straddle trades at: priced with the binomial tree."""
+    return (binomial_tree(S, K, T, r, q, sigma, "call", True, steps)
+            + binomial_tree(S, K, T, r, q, sigma, "put", True, steps))
 
 
 def straddle_price(S, K, T, r, q, sigma):
