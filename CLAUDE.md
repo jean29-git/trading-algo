@@ -19,10 +19,13 @@ people in the industry. Two strategy "books", run like a small trading desk:
   (8.5%, Sharpe 0.77, DD -31.4%) and the same basket with no trend filter
   (4.7%, Sharpe 0.83, DD -12.5%). Honest takeaway: the trend filter cut drawdowns
   but lowered Sharpe vs. always holding the basket. We report this as is.
-- **Book 2, tactical (NEXT):** short-term mean reversion: buy sharp intraday dips in
-  ~10 liquid ETFs and sell the bounce, a few trades per day on hourly/15-min bars from
-  Alpaca. Needs a stop-loss rule and realistic costs (costs dominate at this
-  frequency). Design it with me before coding.
+- **Book 2, tactical (v1 DONE: backtest FAILED):** intraday mean reversion, rules
+  pre-registered in `docs/book2_design.md` (10 liquid ETFs, 15-min bars, buy 2σ dips
+  below the 20-bar average, 200-day filter, 1σ stop, flat by close, own paper account
+  PA3CY7MMI). Result 2016-2026: no edge before costs (-0.7bp/trade), -13.7%/yr and
+  Sharpe -2.82 after 2bp costs. Reported as is. Code: `src/book2_*.py`,
+  tests in `tests/test_book2_engine.py`. Next: decide v2 with Jean (new hypothesis,
+  written down before testing, labelled attempt #2) or move on.
 - **Phase 2 idea:** volatility-regime filter (VIX vs VIX3M term structure).
 
 ## Rules

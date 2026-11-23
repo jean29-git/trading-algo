@@ -51,8 +51,59 @@ These are execution details that stop a backtest from looking better than realit
   win rate, average win vs. average loss, and the gross vs. net table. Plus results
   by year, to show whether the edge is stable or came from one period.
 
+## Coding-level decisions (added 2026-11-22, before the first backtest run)
+
+Details the rules above don't pin down, decided while writing the engine and
+before seeing any result:
+
+- **Sizing in practice:** a 15-minute 1σ is only ~0.2-0.4% of price, so the 0.5%
+  risk rule asks for 130-250% of the book. The 25% cap binds on 99.5% of bars.
+  So in practice every trade is 25% of the book, at most 4 positions at once,
+  and the true risk per trade is ~0.05-0.1%. Rules kept as written.
+- **More signals than room:** if more ETFs signal at once than capital allows,
+  the deepest dip (most standard deviations below the average) gets filled first.
+- **Take-profit mechanics:** the target is the moving average as of the last
+  completed bar, re-set every bar, like a resting limit order updated every 15
+  minutes. If a bar *opens* beyond the stop or the target, the exit is at that
+  open price (a gap through a stop fills worse than the stop).
+- **Entry bar:** the stop and target are live from the entry bar itself.
+- **Window across days:** the 20-bar average and standard deviation run across
+  the overnight break (standard for intraday Bollinger Bands); otherwise no
+  signal would be possible before ~2:30pm.
+- **Half days:** the same timing rules, measured from the actual close.
+- **Diagnostic only:** the backtest also prints a "no regime filter" run, to show
+  what the 200-day filter adds. The official result is the run with the filter.
+
 ## What would count as "it doesn't work"
 
 Decided up front, so we can't move the goalposts later: if the Sharpe after costs
 is below about 0.5, or the edge disappears in the 4bp stress test, Book 2 goes
 live on paper only as an experiment, and the write-up says so plainly.
+
+## Result, first run (2026-11-22): it does not work
+
+Backtest Oct 2016 to Nov 2026, 12,505 trades (about 5 a day), rules exactly as above.
+
+| | Before costs | After costs (2bp) | Stress (4bp) |
+|---|---|---|---|
+| Annual return | -2.3% | -13.7% | -23.8% |
+| Sharpe | -0.45 | -2.82 | -4.89 |
+| Max drawdown | -27% | -78% | -94% |
+
+- **No edge even before costs.** The average trade makes -0.7bp before costs.
+  Exits: 56% stop, 31% target, 13% end of day; that is about what a random walk
+  gives with a stop half as far away as the target. A 15-minute dip in the most
+  liquid ETFs in the world carries no information we can trade on.
+- **Not a backtest artifact.** The "stop first when both are hit" assumption
+  affects 0.4% of trades; making it as optimistic as possible only moves the
+  average trade from -0.7bp to -0.5bp.
+- **Costs are the killer on top.** Trading 25% of the book about 5 times a day is
+  621x turnover a year, so 2bp per side costs 12.4% a year.
+- **Every year loses, every ETF loses.** The regime filter helped a little
+  (no-filter run: -15.7% a year) but can't fix a strategy with no edge.
+- **Verdict against the pre-set bar:** Sharpe -2.82 (needed 0.5) -> does not pass.
+
+The trader's lesson: the most liquid markets are the most efficiently priced.
+At this horizon, the people who earn the bounce are market makers who *collect*
+the spread; a strategy that *pays* the spread on every trade needs a real edge
+first, and this one has none.
