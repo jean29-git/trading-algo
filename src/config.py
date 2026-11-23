@@ -80,3 +80,22 @@ BOOK2_REGIME_DAYS = 200    # only trade an ETF whose last daily close is above i
 BOOK2_RISK_PER_TRADE = 0.005  # hitting the stop loses 0.5% of Book 2's capital
 BOOK2_MAX_POSITION = 0.25     # never more than 25% of the book in one ETF
 BOOK2_COST_BPS = 2            # cost per side (spread + slippage); stress test at 4bp
+
+
+# ===========================================================================
+# BOOK 2, ATTEMPT #2: volatility risk premium (short delta-hedged SPY straddle).
+# Rules: docs/book2_attempt2_vol_premium.md, committed before any backtest.
+# The two MEASURED numbers come from src/check_real_options.py (real 2024-2026
+# Alpaca option prices), fixed before the strategy backtest ran.
+# ===========================================================================
+
+VOL_TARGET_DAYS = 30          # sell the monthly expiry ~1 month out
+VOL_CRASH_MOVE = -0.20        # crash scenario: SPY -20% instantly...
+VOL_CRASH_VOL_MULT = 3.0      # ...and implied vol x3...
+VOL_CRASH_VOL_CAP = 1.50      # ...capped at 150%
+VOL_CRASH_LIMIT = 0.15        # size so that scenario loses at most 15% of the book
+
+VOL_IV_SCALE = 0.837          # MEASURED: real at-the-money SPY implied vol = 83.7% of the VIX
+VOL_OPTION_HALF_SPREAD = 0.09 # MEASURED: $ per share per option, paid on every option trade
+VOL_OPTION_HALF_SPREAD_STRESS = 0.18
+VOL_HEDGE_COST_BPS = 1        # SPY share trades for the delta hedge

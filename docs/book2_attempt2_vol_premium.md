@@ -105,6 +105,39 @@ implied vol, hedged once a day (per share, before costs):
   and in a Black-Scholes world it takes months, in real data (fat tails) far longer.
 - Locked in as `tests/test_vol_engine.py` (7 tests).
 
+### Check 4 result: real option prices vs. the VIX (2026-11-23, before any backtest)
+
+`src/check_real_options.py` took, for 679 trading days (Feb 2024 to Nov 2026), the
+real closing prices of the straddle we would sell (monthly expiry closest to 30
+days, strike nearest SPY) from Alpaca, and found its implied vol with the American
+tree.
+
+- **The VIX was above real at-the-money implied vol on 100% of days**, by a median
+  of 2.83 vol points. Reason: the VIX is built from a strip of SPX options that
+  includes expensive out-of-the-money puts (the skew). A good part of the
+  "insurance premium" in the VIX sits in those puts, not in the at-the-money
+  straddle we sell.
+- **The gap grows with the VIX:** ~2.1 points when VIX < 15, ~2.9 at 15-20, ~3.6
+  at 20-30, ~5.1 above 30. Real at-the-money vol is a steady **~84% of the VIX**
+  (median ratio 0.837, middle half 0.81-0.86).
+
+**Change from the pre-registered rule (decided now, before any backtest):** the
+rule said "VIX minus a fixed haircut". A fixed haircut of 2.83 would overstate the
+premium by **2.3 vol points on average when VIX > 25**, flattering the backtest
+exactly in the stressed markets that decide a short-vol book's fate. A scaled
+haircut fits every regime (error +0.2 points when VIX > 25; median error 0.46
+vs. 0.53). So the backtest uses **implied vol = VIX × 0.837**. Fitting a single
+ratio on 2024-2026 and applying it to 2006-2023 assumes the skew's share of the
+VIX is stable; that assumption is stated here, not hidden.
+
+**Option spreads:** Alpaca has no historical option quotes, only today's. On
+2026-11-23 (a stressed day: VIX 35.9 at Friday's close, SPY +5% intraday), the 24
+contracts within $5 of SPY (next two monthly expiries) had a **median half-spread
+of $0.09** (max $0.34), from Alpaca's free "indicative" feed. That is wider than
+the $0.05 assumed, so by the pre-registered rule **the cost becomes $0.09 per share
+per option, stress test $0.18**. Probably conservative for calm markets, but a
+single snapshot can't show that, so the conservative number stands.
+
 ## Costs (fixed up front)
 
 - **Options:** pay half the bid-ask spread on every option trade: **$0.05 per share
