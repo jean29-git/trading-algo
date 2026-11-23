@@ -9,5 +9,8 @@ __pycache__/
 # Downloaded raw data (anyone can re-download it with src/data.py)
 data/*.csv
 
+# Personal Claude Code permissions (this Mac only)
+.claude/settings.local.json
+
 # Mac clutter
 .DS_Store
