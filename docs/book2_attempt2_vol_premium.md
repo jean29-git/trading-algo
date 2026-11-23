@@ -86,6 +86,25 @@ backtest (selling at entry, buying back on a filter exit) is priced with the
 American tree. Black-Scholes is still used for daily deltas, crash sizing and
 marking open positions, where the gap is small and only shifts P&L between days.
 
+### Check 3 result: Monte Carlo engine check (2026-11-23, before any backtest)
+
+`src/check_monte_carlo.py`: 50,000 simulated months per case, straddle sold at 20%
+implied vol, hedged once a day (per share, before costs):
+
+| Market realizes | Avg P&L | Theory |
+|---|---|---|
+| 20% (= sold) | ≈ $0 | $0 |
+| 15% (calmer) | +$7.97 | +$7.94 |
+| 25% (wilder) | −$7.87 | −$7.94 |
+
+- Also ≈ $0 with 4% rates and dividends (interest and dividend handling correct).
+- **Hedging only once a day leaves noise of about $4.4-5 per share per month**,
+  matching the Derman-Kamal formula (√(π/4) · σ · vega / √n) within 5%; hedging
+  4x a day halves it. A realistic 3-vol-point premium is worth about $4.8 a month,
+  so **each month's noise is as big as the edge**: single months tell us little,
+  and in a Black-Scholes world it takes months, in real data (fat tails) far longer.
+- Locked in as `tests/test_vol_engine.py` (7 tests).
+
 ## Costs (fixed up front)
 
 - **Options:** pay half the bid-ask spread on every option trade: **$0.05 per share
